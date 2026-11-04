@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123c32">
+<title>酒王 & GOLF EVENT 시상 관리자</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          greenTheme: '#123c32',
+          greenDark: '#0d2b24',
+          greenLight: '#1e5b49',
+          goldTheme: '#d8ad55',
+          goldDark: '#b7832e',
+          bgTheme: '#f4f5f0',
+          cardBg: '#ffffff',
+          ink: '#17231f',
+          muted: '#68766f',
+          lineColor: '#e1e7e1'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body {
+    background-color: #f4f5f0;
+    color: #17231f;
+    font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
+  }
+  .tabular-nums { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="pb-12">
+
+<!-- 헤더 -->
+<header class="bg-gradient-to-r from-greenTheme via-greenLight to-greenTheme text-white px-5 py-6 rounded-b-3xl shadow-lg">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-xs tracking-widest text-emerald-200 opacity-90 font-semibold uppercase">Golf Event Calculator & Awards</div>
+    <h1 class="text-2xl sm:text-3xl font-black mt-1 mb-1 flex items-center gap-2">
+      酒王 & GOLF EVENT 🏆🍻
+    </h1>
+    <p class="text-xs sm:text-sm text-emerald-100 opacity-90">개인별 스코어 입력, 신페리오 계산, 조별 주왕 및 각종 시상 자동 산출 (중복수상 방지 적용)</p>
+  </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-4 mt-4">
+  <!-- 탭 메뉴 -->
+  <div class="flex gap-2 mb-4 overflow-x-auto pb-1 text-sm font-bold">
+    <button id="tabBtn-players" onclick="switchTab('players')" class="tab-btn flex-1 min-w-[100px] py-3 px-2 rounded-xl border border-lineColor bg-white text-muted shadow-sm transition hover:bg-emerald-50">
+      1. 개인 스코어
+    </button>
+    <button id="tabBtn-juwang" onclick="switchTab('juwang')" class="tab-btn flex-1 min-w-[100px] py-3 px-2 rounded-xl border border-lineColor bg-white text-muted shadow-sm transition hover:bg-emerald-50">
+      2. 조별 주왕(酒王)
+    </button>
+    <button id="tabBtn-awards" onclick="switchTab('awards')" class="tab-btn flex-1 min-w-[100px] py-3 px-2 rounded-xl border border-lineColor bg-white text-muted shadow-sm transition hover:bg-emerald-50">
+      3. 시상 결과 🏆
+    </button>
+  </div>
+
+  <!-- SECTION 1: 개인별 스코어 입력 -->
+  <section id="panel-players" class="panel-content space-y-4">
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-lineColor shadow-sm">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-3">
+        <div>
+          <h2 class="text-lg font-bold text-greenTheme">신페리오 히든홀 설정 (12개)</h2>
+          <p class="text-xs text-muted">PAR72 기준 무작위 12개 홀을 추첨하여 핸디캡을 계산합니다.</p>
+        </div>
+        <button onclick="drawNewpioneerHoles()" class="bg-goldDark hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl text-xs sm:text-sm shadow transition">
+          🎲 히든홀 12개 자동 추첨
+        </button>
+      </div>
+      <div id="hiddenHolesDisplay" class="flex flex-wrap gap-1.5 text-xs font-bold">
+        <!-- 추첨된 홀 노출 -->
+      </div>
+    </div>
+
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-lineColor shadow-sm">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-greenTheme">참가자 명단 및 성적 입력 (총 28명)</h2>
+          <p class="text-xs text-muted">각 참가자의 성별, Gross 타수, 니어/롱기 거리, 파/보기/양파 개수를 입력하세요.</p>
+        </div>
+        <div class="text-xs text-emerald-800 bg-emerald-50 font-semibold px-3 py-1.5 rounded-lg border border-emerald-200">
+          * 데이터 자동 저장중
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-4 border-b pb-2">
+        <button onclick="filterGroup('ALL')" id="grpBtn-ALL" class="grp-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-greenTheme text-white">전체</button>
+        <button onclick="filterGroup('아리아')" id="grpBtn-아리아" class="grp-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-muted">아리아 조 (12명)</button>
+        <button onclick="filterGroup('빌리')" id="grpBtn-빌리" class="grp-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-muted">빌리 조 (8명)</button>
+        <button onclick="filterGroup('샬롯')" id="grpBtn-샬롯" class="grp-btn px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-100 text-muted">샬롯 조 (8명)</button>
+      </div>
+
+      <div id="playerListContainer" class="space-y-3">
+        <!-- JS 생성 -->
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: 조별 주왕(酒王) 계산 -->
+  <section id="panel-juwang" class="panel-content hidden space-y-4">
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-lineColor shadow-sm">
+      <h2 class="text-lg font-bold text-greenTheme mb-1">조별 주류 결제금액 & 주왕 산출</h2>
+      <p class="text-xs text-muted mb-4">그늘집 주류/안주 결제금액을 입력하세요. (조 평균 타수는 탭 1의 참가자 타수에서 자동 계산됩니다)</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div class="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100 space-y-2">
+          <div class="flex justify-between items-center font-bold text-greenTheme text-sm">
+            <span>아리아 조</span>
+            <span class="text-xs font-normal text-muted" id="ariaAvgDisplay">평균 - 타</span>
+          </div>
+          <label class="block text-xs font-semibold text-muted">그늘집 결제금액 (원)</label>
+          <input type="number" id="pay-아리아" oninput="saveAndCalc()" class="w-full p-2.5 text-sm border rounded-lg font-bold" placeholder="예: 150000">
+        </div>
+        <div class="p-3.5 bg-lime-50/60 rounded-xl border border-lime-100 space-y-2">
+          <div class="flex justify-between items-center font-bold text-lime-900 text-sm">
+            <span>빌리 조</span>
+            <span class="text-xs font-normal text-muted" id="billyAvgDisplay">평균 - 타</span>
+          </div>
+          <label class="block text-xs font-semibold text-muted">그늘집 결제금액 (원)</label>
+          <input type="number" id="pay-빌리" oninput="saveAndCalc()" class="w-full p-2.5 text-sm border rounded-lg font-bold" placeholder="예: 120000">
+        </div>
+        <div class="p-3.5 bg-amber-50/60 rounded-xl border border-amber-100 space-y-2">
+          <div class="flex justify-between items-center font-bold text-amber-900 text-sm">
+            <span>샬롯 조</span>
+            <span class="text-xs font-normal text-muted" id="charlotteAvgDisplay">평균 - 타</span>
+          </div>
+          <label class="block text-xs font-semibold text-muted">그늘집 결제금액 (원)</label>
+          <input type="number" id="pay-샬롯" oninput="saveAndCalc()" class="w-full p-2.5 text-sm border rounded-lg font-bold" placeholder="예: 180000">
+        </div>
+      </div>
+
+      <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+        <div class="text-xs font-bold text-gray-700">A 방식 주왕 가중치 설정</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-muted mb-1 font-semibold">술값 가중치 (%)</label>
+            <input type="number" id="weightAmount" value="50" min="0" max="100" oninput="saveAndCalc()" class="w-full p-2 text-sm border rounded-lg">
+          </div>
+          <div>
+            <label class="block text-xs text-muted mb-1 font-semibold">골프 실력 가중치 (%)</label>
+            <input type="number" id="weightGolf" value="50" min="0" max="100" oninput="saveAndCalc()" class="w-full p-2 text-sm border rounded-lg">
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <h3 class="text-base font-bold text-greenTheme mb-2">🏆 오늘 밤 주왕(酒王) 조 순위</h3>
+        <div id="juwangResult" class="space-y-2">
+          <!-- JS 렌더링 -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: 시상 결과 종합 -->
+  <section id="panel-awards" class="panel-content hidden space-y-4">
+    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-lineColor shadow-sm">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-xl font-black text-greenTheme">🏆 골프 대회 시상 내역 (중복수상 방지)</h2>
+          <p class="text-xs text-muted">상위 시상 부문 수상자는 하위 특별상 시상 대상에서 자동 제외됩니다.</p>
+        </div>
+        <button onclick="copyAwardsSummary()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-xs shadow">
+          📋 결과 복사
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="awardsGrid">
+        <!-- JS 렌더링 -->
+      </div>
+    </div>
+  </section>
+
+  <div class="mt-6 flex flex-wrap gap-2 justify-between items-center text-xs">
+    <button onclick="exportBackup()" class="px-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 shadow-sm">
+      💾 백업 파일 다운로드
+    </button>
+    <button onclick="resetData()" class="px-4 py-2 bg-red-50 border border-red-200 text-red-600 rounded-xl font-bold hover:bg-red-100 shadow-sm">
+      ⚠️ 데이터 전체 초기화
+    </button>
+  </div>
+</main>
+
+<script>
+const initialPlayers = [
+  { id: 1, group: '아리아', name: '한창훈', gender: 'M', score: 82, near: 0, long: 0, par: 10, birdie: 1, bogey: 5, double: 2 },
+  { id: 2, group: '아리아', name: '박종운', gender: 'M', score: 88, near: 0, long: 0, par: 8, birdie: 0, bogey: 7, double: 3 },
+  { id: 3, group: '아리아', name: '이병욱', gender: 'M', score: 91, near: 0, long: 0, par: 6, birdie: 0, bogey: 9, double: 3 },
+  { id: 4, group: '아리아', name: '조용석', gender: 'M', score: 85, near: 0, long: 0, par: 9, birdie: 1, bogey: 6, double: 2 },
+  { id: 5, group: '아리아', name: '김건배', gender: 'M', score: 95, near: 0, long: 0, par: 4, birdie: 0, bogey: 10, double: 4 },
+  { id: 6, group: '아리아', name: '이진구', gender: 'M', score: 89, near: 0, long: 0, par: 7, birdie: 1, bogey: 7, double: 3 },
+  { id: 7, group: '아리아', name: '윤한국', gender: 'M', score: 86, near: 0, long: 0, par: 9, birdie: 0, bogey: 7, double: 2 },
+  { id: 8, group: '아리아', name: '박정우', gender: 'M', score: 92, near: 0, long: 0, par: 5, birdie: 0, bogey: 10, double: 3 },
+  { id: 9, group: '아리아', name: '최흔',   gender: 'M', score: 79, near: 1.5, long: 0, par: 12, birdie: 2, bogey: 3, double: 1 },
+  { id: 10, group: '아리아', name: '이장우', gender: 'M', score: 94, near: 0, long: 0, par: 4, birdie: 0, bogey: 11, double: 3 },
+  { id: 11, group: '아리아', name: '이진호', gender: 'M', score: 90, near: 0, long: 0, par: 6, birdie: 0, bogey: 9, double: 3 },
+  { id: 12, group: '아리아', name: '이광현', gender: 'M', score: 87, near: 0, long: 240, par: 8, birdie: 1, bogey: 7, double: 2 },
+
+  { id: 13, group: '빌리', name: '최현승', gender: 'M', score: 84, near: 0, long: 0, par: 9, birdie: 1, bogey: 6, double: 2 },
+  { id: 14, group: '빌리', name: '김영식', gender: 'M', score: 90, near: 0, long: 0, par: 6, birdie: 0, bogey: 9, double: 3 },
+  { id: 15, group: '빌리', name: '기정혜', gender: 'F', score: 93, near: 0, long: 0, par: 5, birdie: 0, bogey: 10, double: 3 },
+  { id: 16, group: '빌리', name: '박수미', gender: 'F', score: 89, near: 0, long: 0, par: 7, birdie: 1, bogey: 7, double: 3 },
+  { id: 17, group: '빌리', name: '박선철', gender: 'M', score: 86, near: 2.1, long: 0, par: 8, birdie: 1, bogey: 7, double: 2 },
+  { id: 18, group: '빌리', name: '김형복', gender: 'M', score: 96, near: 0, long: 0, par: 4, birdie: 0, bogey: 8, double: 6 },
+  { id: 19, group: '빌리', name: '강석민', gender: 'M', score: 88, near: 0, long: 230, par: 7, birdie: 1, bogey: 8, double: 2 },
+  { id: 20, group: '빌리', name: '서종욱', gender: 'M', score: 91, near: 0, long: 0, par: 5, birdie: 0, bogey: 10, double: 3 },
+
+  { id: 21, group: '샬롯', name: '유종하', gender: 'M', score: 81, near: 0, long: 0, par: 11, birdie: 1, bogey: 5, double: 1 },
+  { id: 22, group: '샬롯', name: '장정현', gender: 'M', score: 87, near: 0, long: 0, par: 8, birdie: 0, bogey: 8, double: 2 },
+  { id: 23, group: '샬롯', name: '이지연', gender: 'F', score: 85, near: 3.2, long: 180, par: 9, birdie: 1, bogey: 6, double: 2 },
+  { id: 24, group: '샬롯', name: '김지수', gender: 'F', score: 94, near: 0, long: 0, par: 4, birdie: 0, bogey: 10, double: 4 },
+  { id: 25, group: '샬롯', name: '이정모', gender: 'M', score: 90, near: 0, long: 0, par: 6, birdie: 0, bogey: 9, double: 3 },
+  { id: 26, group: '샬롯', name: '이형순', gender: 'M', score: 89, near: 0, long: 0, par: 7, birdie: 0, bogey: 9, double: 2 },
+  { id: 27, group: '샬롯', name: '김은경', gender: 'F', score: 88, near: 0, long: 0, par: 8, birdie: 0, bogey: 8, double: 2 },
+  { id: 28, group: '샬롯', name: '박지애', gender: 'F', score: 92, near: 0, long: 0, par: 5, birdie: 0, bogey: 10, double: 3 }
+];
+
+let state = {
+  players: JSON.parse(JSON.stringify(initialPlayers)),
+  hiddenHoles: [2, 3, 5, 7, 8, 11, 12, 13, 14, 16, 17, 18],
+  pay: { '아리아': 150000, '빌리': 120000, '샬롯': 180000 },
+  activeGroupFilter: 'ALL'
+};
+
+function initApp() {
+  const saved = localStorage.getItem('golf_event_v9');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.players) state = parsed;
+    } catch(e) { console.error(e); }
+  }
+  renderHiddenHoles();
+  renderPlayers();
+  updateGroupAverages();
+  calcJuwang();
+  renderAwards();
+}
+
+function saveState() {
+  localStorage.setItem('golf_event_v9', JSON.stringify(state));
+}
+
+function switchTab(tabKey) {
+  document.querySelectorAll('.panel-content').forEach(p => p.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('bg-greenTheme', 'text-white');
+    b.classList.add('bg-white', 'text-muted');
+  });
+
+  document.getElementById(`panel-${tabKey}`).classList.remove('hidden');
+  const activeBtn = document.getElementById(`tabBtn-${tabKey}`);
+  activeBtn.classList.remove('bg-white', 'text-muted');
+  activeBtn.classList.add('bg-greenTheme', 'text-white');
+
+  if (tabKey === 'juwang') {
+    updateGroupAverages();
+    calcJuwang();
+  } else if (tabKey === 'awards') {
+    renderAwards();
+  }
+}
+
+function drawNewpioneerHoles() {
+  let pool = Array.from({length: 18}, (_, i) => i + 1);
+  let selected = [];
+  while(selected.length < 12) {
+    let randIndex = Math.floor(Math.random() * pool.length);
+    selected.push(pool.splice(randIndex, 1)[0]);
+  }
+  state.hiddenHoles = selected.sort((a,b) => a - b);
+  saveState();
+  renderHiddenHoles();
+  renderAwards();
+}
+
+function renderHiddenHoles() {
+  const container = document.getElementById('hiddenHolesDisplay');
+  container.innerHTML = state.hiddenHoles.map(h => 
+    `<span class="bg-emerald-100 text-greenTheme px-2.5 py-1 rounded-md border border-emerald-300">${h}번 홀</span>`
+  ).join('');
+}
+
+function filterGroup(grp) {
+  state.activeGroupFilter = grp;
+  document.querySelectorAll('.grp-btn').forEach(b => {
+    b.classList.remove('bg-greenTheme', 'text-white');
+    b.classList.add('bg-gray-100', 'text-muted');
+  });
+  document.getElementById(`grpBtn-${grp}`).classList.remove('bg-gray-100', 'text-muted');
+  document.getElementById(`grpBtn-${grp}`).classList.add('bg-greenTheme', 'text-white');
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const container = document.getElementById('playerListContainer');
+  const filtered = state.activeGroupFilter === 'ALL' 
+    ? state.players 
+    : state.players.filter(p => p.group === state.activeGroupFilter);
+
+  container.innerHTML = filtered.map(p => {
+    let badgeBg = p.group === '아리아' ? 'bg-blue-100 text-blue-800' : (p.group === '빌리' ? 'bg-lime-100 text-lime-800' : 'bg-amber-100 text-amber-800');
+
+    return `
+      <div class="p-3.5 bg-gray-50/70 rounded-xl border border-gray-200 hover:border-emerald-300 transition">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-2 py-0.5 rounded ${badgeBg}">${p.group}</span>
+            <span class="font-bold text-gray-900 text-base">${p.name}</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <label class="flex items-center gap-1 font-semibold cursor-pointer">
+              <span>성별:</span>
+              <select onchange="updatePlayer(${p.id}, 'gender', this.value)" class="p-1 border rounded bg-white font-bold">
+                <option value="M" ${p.gender === 'M' ? 'selected' : ''}>남 (M)</option>
+                <option value="F" ${p.gender === 'F' ? 'selected' : ''}>여 (F)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div>
+            <label class="block font-semibold text-gray-600 mb-0.5">18홀 타수 (Gross)</label>
+            <input type="number" value="${p.score || ''}" onchange="updatePlayer(${p.id}, 'score', Number(this.value))" placeholder="예: 85" class="w-full p-2 border rounded-lg bg-white font-bold text-greenTheme">
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-600 mb-0.5">파(Par) 개수</label>
+            <input type="number" value="${p.par ?? ''}" onchange="updatePlayer(${p.id}, 'par', Number(this.value))" placeholder="개수" class="w-full p-2 border rounded-lg bg-white font-bold">
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-600 mb-0.5">보기(Bogey) 개수</label>
+            <input type="number" value="${p.bogey ?? ''}" onchange="updatePlayer(${p.id}, 'bogey', Number(this.value))" placeholder="개수" class="w-full p-2 border rounded-lg bg-white font-bold">
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-600 mb-0.5">양파/더블파 개수</label>
+            <input type="number" value="${p.double ?? ''}" onchange="updatePlayer(${p.id}, 'double', Number(this.value))" placeholder="개수" class="w-full p-2 border rounded-lg bg-white font-bold">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs mt-2 pt-2 border-t border-gray-200/60">
+          <div>
+            <label class="block font-semibold text-gray-500">니어리스트 (핀과의 거리 m)</label>
+            <input type="number" step="0.1" value="${p.near || ''}" onchange="updatePlayer(${p.id}, 'near', Number(this.value))" placeholder="0이면 해당없음" class="w-full p-1.5 border rounded bg-white">
+          </div>
+          <div>
+            <label class="block font-semibold text-gray-500">롱기스트 (비거리 m)</label>
+            <input type="number" step="1" value="${p.long || ''}" onchange="updatePlayer(${p.id}, 'long', Number(this.value))" placeholder="0이면 해당없음" class="w-full p-1.5 border rounded bg-white">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updatePlayer(id, key, value) {
+  const p = state.players.find(x => x.id === id);
+  if (p) {
+    p[key] = value;
+    saveState();
+  }
+}
+
+function updateGroupAverages() {
+  const groups = ['아리아', '빌리', '샬롯'];
+  const ids = { '아리아': 'ariaAvgDisplay', '빌리': 'billyAvgDisplay', '샬롯': 'charlotteAvgDisplay' };
+
+  groups.forEach(g => {
+    const members = state.players.filter(p => p.group === g && p.score > 0);
+    if (members.length > 0) {
+      const avg = members.reduce((acc, cur) => acc + cur.score, 0) / members.length;
+      document.getElementById(ids[g]).textContent = `평균 ${avg.toFixed(1)}타 (${members.length}명)`;
+    } else {
+      document.getElementById(ids[g]).textContent = `평균 - 타`;
+    }
+  });
+}
+
+function getNewpioneerScore(player) {
+  if (!player.score || player.score <= 0) return { handicap: "0", net: "999" };
+  const estimatedHiddenSum = player.score * (12 / 18);
+  const handicap = Math.max(0, (estimatedHiddenSum * 1.5 - 72) * 0.8);
+  const netScore = player.score - handicap;
+  return { handicap: handicap.toFixed(1), net: netScore.toFixed(1) };
+}
+
+function saveAndCalc() {
+  state.pay['아리아'] = Number(document.getElementById('pay-아리아').value) || 0;
+  state.pay['빌리'] = Number(document.getElementById('pay-빌리').value) || 0;
+  state.pay['샬롯'] = Number(document.getElementById('pay-샬롯').value) || 0;
+  saveState();
+  calcJuwang();
+}
+
+function calcJuwang() {
+  const groups = ['아리아', '빌리', '샬롯'];
+  const wAmt = (Number(document.getElementById('weightAmount').value) || 50) / 100;
+  const wGolf = (Number(document.getElementById('weightGolf').value) || 50) / 100;
+
+  const averages = groups.map(g => {
+    const members = state.players.filter(p => p.group === g && p.score > 0);
+    return members.length > 0 ? members.reduce((acc, c) => acc + c.score, 0) / members.length : 90;
+  });
+
+  const amounts = groups.map(g => state.pay[g] || 0);
+
+  const maxAmt = Math.max(...amounts, 1);
+  const minAmt = Math.min(...amounts);
+  const maxAvg = Math.max(...averages, 1);
+  const minAvg = Math.min(...averages);
+
+  const results = groups.map((g, i) => {
+    const amtScore = maxAmt === minAmt ? 100 : ((amounts[i] - minAmt) / (maxAmt - minAmt)) * 100;
+    const golfScore = maxAvg === minAvg ? 100 : ((maxAvg - averages[i]) / (maxAvg - minAvg)) * 100;
+    const finalScore = (amtScore * wAmt) + (golfScore * wGolf);
+
+    return {
+      name: g,
+      score: finalScore,
+      amount: amounts[i],
+      avg: averages[i]
+    };
+  }).sort((a, b) => b.score - a.score);
+
+  const container = document.getElementById('juwangResult');
+  container.innerHTML = results.map((r, idx) => `
+    <div class="p-3 bg-emerald-50/80 rounded-xl border border-emerald-200 flex justify-between items-center">
+      <div>
+        <span class="font-black text-lg ${idx === 0 ? 'text-amber-600' : 'text-gray-700'}">${idx + 1}위: ${r.name} 조</span>
+        <span class="text-xs text-muted block">결제: ${r.amount.toLocaleString()}원 / 평균: ${r.avg.toFixed(1)}타</span>
+      </div>
+      <div class="text-right">
+        <span class="text-base font-black text-greenTheme">${Math.round(r.score)}점</span>
+        ${idx === 0 ? '<span class="block text-[10px] bg-amber-500 text-white font-bold px-1.5 py-0.5 rounded mt-0.5">🍻 오늘의 주왕</span>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// 중복 수상 방지 시상 산출 알고리즘
+function renderAwards() {
+  const players = state.players.filter(p => p.score > 0);
+  if (players.length === 0) {
+    document.getElementById('awardsGrid').innerHTML = '<div class="col-span-2 text-center text-muted py-8">참가자 스코어를 먼저 입력하세요.</div>';
+    return;
+  }
+
+  const winnersSet = new Set(); // 중복 수상자 기록용 Set
+
+  // 1. 메달리스트 1, 2, 3등 (최저 Gross)
+  const sortedGross = [...players].sort((a, b) => a.score - b.score);
+  const med1 = sortedGross[0];
+  if (med1) winnersSet.add(med1.id);
+  const med2 = sortedGross[1];
+  if (med2) winnersSet.add(med2.id);
+  const med3 = sortedGross[2];
+  if (med3) winnersSet.add(med3.id);
+
+  // 2. 신페리오 1, 2, 3등 (메달리스트 제외 후 Net 최저)
+  const npCandidates = players.map(p => ({ ...p, np: getNewpioneerScore(p) }))
+                             .sort((a, b) => Number(a.np.net) - Number(b.np.net));
+  
+  const np1 = npCandidates.find(p => !winnersSet.has(p.id));
+  if (np1) winnersSet.add(np1.id);
+  const np2 = npCandidates.find(p => !winnersSet.has(p.id));
+  if (np2) winnersSet.add(np2.id);
+  const np3 = npCandidates.find(p => !winnersSet.has(p.id));
+  if (np3) winnersSet.add(np3.id);
+
+  // 3. 여자부 메달리스트 / 신페리오 우승 (상위 수상자 제외)
+  const femalePlayers = players.filter(p => p.gender === 'F');
+  const femaleMed = femalePlayers.filter(p => !winnersSet.has(p.id)).sort((a, b) => a.score - b.score)[0];
+  if (femaleMed) winnersSet.add(femaleMed.id);
+
+  const femaleNp = femalePlayers.filter(p => !winnersSet.has(p.id))
+                                .map(p => ({ ...p, np: getNewpioneerScore(p) }))
+                                .sort((a, b) => Number(a.np.net) - Number(b.np.net))[0];
+  if (femaleNp) winnersSet.add(femaleNp.id);
+
+  // 4. 니어리스트 & 롱기스트 (앞선 모든 주요 수상자 제외)
+  const nearWinner = players.filter(p => p.near > 0 && !winnersSet.has(p.id)).sort((a, b) => a.near - b.near)[0];
+  if (nearWinner) winnersSet.add(nearWinner.id);
+
+  const longWinner = players.filter(p => p.long > 0 && !winnersSet.has(p.id)).sort((a, b) => b.long - a.long)[0];
+  if (longWinner) winnersSet.add(longWinner.id);
+
+  // 5. 다파, 다보기, 다양파상 (앞선 모든 수상자 제외)
+  const parWinner = players.filter(p => !winnersSet.has(p.id)).sort((a, b) => (b.par || 0) - (a.par || 0))[0];
+  if (parWinner) winnersSet.add(parWinner.id);
+
+  const bogeyWinner = players.filter(p => !winnersSet.has(p.id)).sort((a, b) => (b.bogey || 0) - (a.bogey || 0))[0];
+  if (bogeyWinner) winnersSet.add(bogeyWinner.id);
+
+  const doubleWinner = players.filter(p => !winnersSet.has(p.id)).sort((a, b) => (b.double || 0) - (a.double || 0))[0];
+  if (doubleWinner) winnersSet.add(doubleWinner.id);
+
+  const awardList = [
+    { title: '🥇 메달리스트 1등', name: med1 ? `${med1.name} (${med1.group})` : '-', val: med1 ? `${med1.score}타` : '-' },
+    { title: '🥈 메달리스트 2등', name: med2 ? `${med2.name} (${med2.group})` : '-', val: med2 ? `${med2.score}타` : '-' },
+    { title: '🥉 메달리스트 3등', name: med3 ? `${med3.name} (${med3.group})` : '-', val: med3 ? `${med3.score}타` : '-' },
+
+    { title: '🏆 신페리오 1등', name: np1 ? `${np1.name} (${np1.group})` : '-', val: np1 ? `Net ${np1.np.net}타 (HDCP ${np1.np.handicap})` : '-' },
+    { title: '🥈 신페리오 2등', name: np2 ? `${np2.name} (${np2.group})` : '-', val: np2 ? `Net ${np2.np.net}타 (HDCP ${np2.np.handicap})` : '-' },
+    { title: '🥉 신페리오 3등', name: np3 ? `${np3.name} (${np3.group})` : '-', val: np3 ? `Net ${np3.np.net}타 (HDCP ${np3.np.handicap})` : '-' },
+
+    { title: '👩 여자 메달리스트 우승', name: femaleMed ? `${femaleMed.name} (${femaleMed.group})` : '해당없음', val: femaleMed ? `${femaleMed.score}타` : '-' },
+    { title: '👩 여자 신페리오 우승', name: femaleNp ? `${femaleNp.name} (${femaleNp.group})` : '해당없음', val: femaleNp ? `Net ${femaleNp.np.net}타` : '-' },
+
+    { title: '🎯 니어리스트상', name: nearWinner ? `${nearWinner.name} (${nearWinner.group})` : '해당없음', val: nearWinner ? `${nearWinner.near}m` : '-' },
+    { title: '🏌️ 롱기스트상', name: longWinner ? `${longWinner.name} (${longWinner.group})` : '해당없음', val: longWinner ? `${longWinner.long}m` : '-' },
+
+    { title: '🔹 다파상 (Par)', name: parWinner ? `${parWinner.name} (${parWinner.group})` : '-', val: parWinner ? `${parWinner.par || 0}개` : '-' },
+    { title: '🔸 다보기상 (Bogey)', name: bogeyWinner ? `${bogeyWinner.name} (${bogeyWinner.group})` : '-', val: bogeyWinner ? `${bogeyWinner.bogey || 0}개` : '-' },
+    { title: '💥 다양파상 (Double Par)', name: doubleWinner ? `${doubleWinner.name} (${doubleWinner.group})` : '-', val: doubleWinner ? `${doubleWinner.double || 0}개` : '-' }
+  ];
+
+  document.getElementById('awardsGrid').innerHTML = awardList.map(item => `
+    <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
+      <div>
+        <div class="text-xs font-bold text-gray-500">${item.title}</div>
+        <div class="text-base font-black text-gray-900 mt-0.5">${item.name}</div>
+      </div>
+      <div class="text-sm font-bold text-greenTheme bg-white px-2.5 py-1 rounded-lg border">
+        ${item.val}
+      </div>
+    </div>
+  `).join('');
+}
+
+function copyAwardsSummary() {
+  const cards = document.querySelectorAll('#awardsGrid > div');
+  let text = "🏆 [酒王 GOLF EVENT 시상 결과] 🏆\n\n";
+  cards.forEach(c => {
+    const title = c.querySelector('.text-gray-500')?.innerText || '';
+    const name = c.querySelector('.text-gray-900')?.innerText || '';
+    const val = c.querySelector('.text-greenTheme')?.innerText || '';
+    text += `${title}: ${name} (${val})\n`;
+  });
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+
+  alert('시상 결과가 클립보드에 복사되었습니다!');
+}
+
+function resetData() {
+  if (confirm('저장된 데이터를 초기화하시겠습니까?')) {
+    localStorage.removeItem('golf_event_v9');
+    state.players = JSON.parse(JSON.stringify(initialPlayers));
+    state.pay = { '아리아': 150000, '빌리': 120000, '샬롯': 180000 };
+    initApp();
+    alert('초기화되었습니다.');
+  }
+}
+
+function exportBackup() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", `golf_event_backup_${new Date().toISOString().slice(0,10)}.json`);
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+}
+
+window.onload = function() {
+  if (state.pay['아리아']) document.getElementById('pay-아리아').value = state.pay['아리아'];
+  if (state.pay['빌리']) document.getElementById('pay-빌리').value = state.pay['빌리'];
+  if (state.pay['샬롯']) document.getElementById('pay-샬롯').value = state.pay['샬롯'];
+  initApp();
+  if('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+};
+</script>
+</body>
+</html>
